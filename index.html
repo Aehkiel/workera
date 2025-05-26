@@ -38,36 +38,29 @@
     throw new Error("Falta el parámetro 'rut'");
   }
 
-  const key = `link_${rut}`;
-  const storageURL = `https://store.zapier.com/api/records?key=${encodeURIComponent(key)}`;
+  const sheetURL = "https://opensheet.elk.sh/1OQZae_rUyrxIuRF7Kk3U3FLSa-GicNP7H8fSyCYf6eM/Links Públicos";
 
-  console.log(`Buscando redirección en Storage para la clave: ${key}`);
-
-  const checkLink = async () => {
+  const buscarLink = async () => {
     try {
-      const res = await fetch(storageURL);
-      if (!res.ok) {
-        console.warn("Respuesta no válida desde Zapier Storage:", res.status);
-        return;
-      }
+      const res = await fetch(sheetURL);
+      if (!res.ok) throw new Error("No se pudo acceder al sheet público");
 
       const data = await res.json();
-      const url = data[key];
+      const fila = data.find(row => row.RUT?.trim() === rut.trim());
 
-      if (url) {
-        console.log(`🔁 Redirigiendo a: ${url}`);
-        window.location.href = url;
+      if (fila && fila["URL Final"]) {
+        console.log("🔁 Redirigiendo a:", fila["URL Final"]);
+        window.location.href = fila["URL Final"];
       } else {
-        console.log("⏳ No hay URL disponible aún...");
+        console.log("⏳ Aún no hay URL para este RUT...");
       }
-
     } catch (e) {
-      console.error("❌ Error al consultar Storage by Zapier", e);
+      console.error("❌ Error al obtener el link:", e);
     }
   };
 
-  // Revisar cada 2 segundos
-  setInterval(checkLink, 2000);
+  // Intentar cada 2 segundos
+  setInterval(buscarLink, 2000);
 </script>
 
 </body>
