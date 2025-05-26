@@ -30,34 +30,45 @@
   <p>No cierres esta ventana. Te redirigiremos automáticamente.</p>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const rut = params.get("rut");
+  const params = new URLSearchParams(window.location.search);
+  const rut = params.get("rut");
 
-    if (!rut) {
-      document.body.innerHTML = "<h2>RUT no proporcionado.</h2>";
-      throw new Error("Falta el parámetro 'rut'");
-    }
+  if (!rut) {
+    document.body.innerHTML = "<h2>RUT no proporcionado.</h2>";
+    throw new Error("Falta el parámetro 'rut'");
+  }
 
-    const key = `link_${rut}`;
-    const storageURL = `https://store.zapier.com/api/records?key=${encodeURIComponent(key)}`;
+  const key = `link_${rut}`;
+  const storageURL = `https://store.zapier.com/api/records?key=${encodeURIComponent(key)}`;
 
-    const checkLink = async () => {
-      try {
-        const res = await fetch(storageURL);
-        if (res.ok) {
-          const data = await res.json();
-          const url = data[key];
-          if (url && url.includes("tally.so")) {
-            window.location.href = url;
-          }
-        }
-      } catch (e) {
-        console.error("Error al consultar Storage by Zapier", e);
+  console.log(`Buscando redirección en Storage para la clave: ${key}`);
+
+  const checkLink = async () => {
+    try {
+      const res = await fetch(storageURL);
+      if (!res.ok) {
+        console.warn("Respuesta no válida desde Zapier Storage:", res.status);
+        return;
       }
-    };
 
-    // Revisar cada 2 segundos
-    setInterval(checkLink, 2000);
-  </script>
+      const data = await res.json();
+      const url = data[key];
+
+      if (url) {
+        console.log(`🔁 Redirigiendo a: ${url}`);
+        window.location.href = url;
+      } else {
+        console.log("⏳ No hay URL disponible aún...");
+      }
+
+    } catch (e) {
+      console.error("❌ Error al consultar Storage by Zapier", e);
+    }
+  };
+
+  // Revisar cada 2 segundos
+  setInterval(checkLink, 2000);
+</script>
+
 </body>
 </html>
