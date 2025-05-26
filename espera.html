@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Espere mientras preparamos todo...</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 10%;
+    }
+    .spinner {
+      margin: 40px auto;
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #555;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Estamos preparando tus fechas de migración...</h1>
+  <div class="spinner"></div>
+  <p>No cierres esta ventana. Te redirigiremos automáticamente.</p>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const rut = params.get("rut");
+
+    if (!rut) {
+      document.body.innerHTML = "<h2>RUT no proporcionado.</h2>";
+      throw new Error("Falta el parámetro 'rut'");
+    }
+
+    const key = `link_${rut}`;
+    const storageURL = `https://store.zapier.com/api/records?key=${encodeURIComponent(key)}`;
+
+    const checkLink = async () => {
+      try {
+        const res = await fetch(storageURL);
+        if (res.ok) {
+          const data = await res.json();
+          const url = data[key];
+          if (url && url.includes("tally.so")) {
+            window.location.href = url;
+          }
+        }
+      } catch (e) {
+        console.error("Error al consultar Storage by Zapier", e);
+      }
+    };
+
+    // Revisar cada 2 segundos
+    setInterval(checkLink, 2000);
+  </script>
+</body>
+</html>
