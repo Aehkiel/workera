@@ -40,27 +40,36 @@
 
   const sheetURL = "https://opensheet.elk.sh/1OQZae_rUyrxIuRF7Kk3U3FLSa-GicNP7H8fSyCYf6eM/Links Públicos";
 
-  const buscarLink = async () => {
+  const buscarLinkMasReciente = async () => {
     try {
       const res = await fetch(sheetURL);
       if (!res.ok) throw new Error("No se pudo acceder al sheet público");
 
       const data = await res.json();
-      const fila = data.find(row => row.RUT?.trim() === rut.trim());
 
-      if (fila && fila["URL Final"]) {
-        console.log("🔁 Redirigiendo a:", fila["URL Final"]);
-        window.location.href = fila["URL Final"];
+      // Buscar TODAS las filas que coincidan con el RUT
+      const filasCoincidentes = data.filter(row => row.RUT?.trim() === rut.trim());
+
+      if (filasCoincidentes.length > 0) {
+        // Tomar la última ocurrencia
+        const filaMasReciente = filasCoincidentes[filasCoincidentes.length - 1];
+
+        if (filaMasReciente["URL Final"]) {
+          console.log("🔁 Redirigiendo a:", filaMasReciente["URL Final"]);
+          window.location.href = filaMasReciente["URL Final"];
+        } else {
+          console.log("⏳ Coincidió el RUT pero no hay URL Final en esa fila...");
+        }
       } else {
-        console.log("⏳ Aún no hay URL para este RUT...");
+        console.log("⚠️ No se encontró ninguna fila con ese RUT");
       }
     } catch (e) {
       console.error("❌ Error al obtener el link:", e);
     }
   };
 
-  // Intentar cada 2 segundos
-  setInterval(buscarLink, 2000);
+  // Intentar cada 2 segundos hasta que aparezca
+  setInterval(buscarLinkMasReciente, 2000);
 </script>
 
 </body>
